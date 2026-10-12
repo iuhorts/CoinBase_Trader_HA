@@ -1,0 +1,74 @@
+name: Coinbase Trader
+version: "0.1.0"
+slug: coinbase_trader
+description: Grid trading bot for Coinbase Advanced Trade with Home Assistant sensors and Telegram alerts
+url: https://github.com/iuhorts/CoinBase_Trader_HA
+arch:
+  - aarch64
+  - amd64
+startup: services
+boot: auto
+init: false
+hassio_api: true
+homeassistant_api: true
+host_network: false
+options:
+  dry_run: false
+  log_level: info
+  product_id: ETH-EUR
+  grid_levels: 8
+  grid_spacing_pct: 2.0
+  grid_anchor_price: 0
+  min_profit_margin_pct: 0.4
+  maker_fee_pct: 0.6
+  taker_fee_pct: 1.2
+  use_fees_from_api: true
+  use_signals: true
+  granularity: FIVE_MINUTE
+  ema_fast: 21
+  ema_slow: 55
+  rsi_period: 14
+  rsi_overbought: 70
+  rsi_oversold: 30
+  max_drawdown_filter_pct: 6
+  poll_interval_seconds: 60
+  reserve_quote_pct: 0
+  allow_sells: true
+  max_open_orders: 12
+  ha_sensors: true
+  telegram_enabled: false
+  telegram_commands: true
+  telegram_chat_id: ""
+  telegram_bot_token: ""
+  cdp_api_key_name: ""
+  cdp_api_key_secret: ""
+schema:
+  dry_run: bool
+  log_level: list(trace|debug|info|warning|error|critical)
+  product_id: str
+  grid_levels: int(2,50)
+  grid_spacing_pct: float(1,20)
+  grid_anchor_price: float(0,100000000)
+  min_profit_margin_pct: float(0,10)
+  maker_fee_pct: float(0,5)
+  taker_fee_pct: float(0,5)
+  use_fees_from_api: bool
+  use_signals: bool
+  granularity: list(ONE_MINUTE|FIVE_MINUTE|FIFTEEN_MINUTE|THIRTY_MINUTE|ONE_HOUR|SIX_HOUR|ONE_DAY)
+  ema_fast: int(2,500)
+  ema_slow: int(3,500)
+  rsi_period: int(2,100)
+  rsi_overbought: float(50,100)
+  rsi_oversold: float(0,50)
+  max_drawdown_filter_pct: float(0,50)
+  poll_interval_seconds: int(10,3600)
+  reserve_quote_pct: float(0,99)
+  allow_sells: bool
+  max_open_orders: int(1,100)
+  ha_sensors: bool
+  telegram_enabled: bool
+  telegram_commands: bool
+  telegram_chat_id: str
+  telegram_bot_token: password
+  cdp_api_key_name: str
+  cdp_api_key_secret: password
