@@ -38,6 +38,8 @@ class Exchange:
         self.sim_open = {}
         self._products = {}
         self._known = None
+        self._snapshot = None
+        self._snapshot_time = 0.0
 
     def get_product(self, product_id):
         if product_id in self._products:
@@ -58,7 +60,15 @@ class Exchange:
     def known_products(self):
         if self._known is not None:
             return self._known
-        ids = set()
+        ids = set(self.all_products(ttl=3600).keys())
+        self._known = ids
+        return ids
+
+    def all_products(self, ttl=60):
+        now = time.time()
+        if self._snapshot is not None and (now - self._snapshot_time) < ttl:
+            return self._snapshot
+        mapping = {}
         offset = 0
         try:
             while True:
@@ -67,17 +77,50 @@ class Exchange:
                 for product in products:
                     pid = product.get("product_id")
                     if pid:
-                        ids.add(pid)
+                        mapping[pid] = product
                 if len(products) < 250:
                     break
                 offset += 250
         except Exception as exc:
             self.log.warning("could not list products: %s", exc)
-        self._known = ids
-        return ids
+        if mapping or self._snapshot is None:
+            self._snapshot = mapping
+            self._snapshot_time = now
+        return self._snapshot
+
+    def portfolio_value_eur(self, balances):
+        products = self.all_products()
+        usdc_eur = 0.0
+        for pid in ("USDC-EUR", "USDT-EUR"):
+            product = products.get(pid)
+            if product and float(product.get("price") or 0) > 0:
+                usdc_eur = float(product["price"])
+                break
+        total = 0.0
+        for currency, balance in balances.items():
+            quantity = float(balance.get("available", 0.0)) + float(balance.get("hold", 0.0))
+            if quantity <= 0:
+                continue
+            if currency in ("EUR", "EURC"):
+                total += quantity
+                continue
+            if currency in ("USDC", "USDT", "USD", "DAI", "PYUSD"):
+                total += quantity * (usdc_eur or 1.0)
+                continue
+            eur_product = products.get(f"{currency}-EUR")
+            if eur_product and float(eur_product.get("price") or 0) > 0:
+                total += quantity * float(eur_product["price"])
+                continue
+            usd_product = products.get(f"{currency}-USDC") or products.get(f"{currency}-USD")
+            if usd_product and float(usd_product.get("price") or 0) > 0:
+                total += quantity * float(usd_product["price"]) * (usdc_eur or 1.0)
+        return total
 
     def get_price(self, product_id):
-        return float(self.get_product(product_id).get("price") or 0)
+        try:
+            return float(self.client.get_public_product(product_id).to_dict().get("price") or 0)
+        except Exception:
+            return float(self.get_product(product_id).get("price") or 0)
 
     def get_candles(self, product_id, granularity, count):
         seconds = GRANULARITY_SECONDS.get(granularity, 300)

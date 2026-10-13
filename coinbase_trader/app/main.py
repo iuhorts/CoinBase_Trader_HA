@@ -163,6 +163,8 @@ class Trader:
         overall = "paused" if all(status == "paused" for status in statuses) and statuses else "running"
         self.ha.set_state("status", overall, {"friendly_name": "Coinbase Trader status", "icon": "mdi:robot"})
         self.ha.set_state("active_products", len(self.bots), {"friendly_name": "Coinbase Trader products", "icon": "mdi:format-list-bulleted"})
+        portfolio_eur = self.exchange.portfolio_value_eur(balances) if self.exchange.private else 0.0
+        self.ha.set_state("portfolio_eur", round(portfolio_eur, 2), {"unit_of_measurement": "EUR", "friendly_name": "Coinbase Trader valor total", "icon": "mdi:cash-multiple"})
         self.ha.set_state("total_realized_pnl", round(total_pnl, 4), {"friendly_name": "Coinbase Trader total realized P/L", "icon": "mdi:chart-line"})
         self.ha.set_state("fee_maker", round(self.maker_fee * 100, 3), {"unit_of_measurement": "%", "friendly_name": "Coinbase maker fee", "icon": "mdi:percent"})
         self.ha.set_state("fee_taker", round(self.taker_fee * 100, 3), {"unit_of_measurement": "%", "friendly_name": "Coinbase taker fee", "icon": "mdi:percent"})

@@ -4,10 +4,17 @@ views:
     path: coinbase-trader
     icon: mdi:robot
     cards:
+      - type: markdown
+        content: |
+          # {{ states('sensor.coinbase_trader_portfolio_eur') }} €
+          **Valor total del compte**
+
       - type: entities
         title: Resum
         show_header_toggle: false
         entities:
+          - entity: sensor.coinbase_trader_portfolio_eur
+            name: Valor total (EUR)
           - entity: sensor.coinbase_trader_status
             name: Estat
           - entity: sensor.coinbase_trader_active_products
