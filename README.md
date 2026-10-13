@@ -66,7 +66,7 @@ Els sensors apareixeran com `sensor.coinbase_trader_*` (status, price, balance_q
 | `grid_spacing_pct` | `2.0` | Espaiat entre nivells (%) |
 | `grid_anchor_price` | `0` | Preu d'ancoratge (0 = preu actual al primer arrencada) |
 | `min_profit_margin_pct` | `0.4` | Marge net mínim (%) per nivell |
-| `maker_fee_pct` / `taker_fee_pct` | `0.6` / `1.2` | Fallback (el codi llegeix la fee real si pots) |
+| `maker_fee_pct` / `taker_fee_pct` | `0.25` / `0.5` | Fallback (el codi llegeix la fee real si pots) |
 | `use_signals` | `true` | Filtre EMA/RSI actiu |
 | `poll_interval_seconds` | `60` | Freqüència del loop |
 | `reserve_quote_pct` | `0` | % del saldo EUR que no es toca |
@@ -76,4 +76,4 @@ Els sensors apareixeran com `sensor.coinbase_trader_*` (status, price, balance_q
 
 - Les keys es guarden a les **opcions de l'add-on** (camp `password`), mai al repositori.
 - La key CDP ha de tenir permissos **View + Trade**; **no** activis Withdraw/Transfer, i valora la **IP allowlist**.
-- `0.60%`+`0.60%` de maker round-trip implica que una reixa amb espaiat inferior a ~1.6% **perd diners**: el bot ho bloqueja.
+- `0.25%`+`0.25%` de maker round-trip implica que una reixa amb espaiat inferior a ~0.5% **perd diners**: el bot ho bloqueja.

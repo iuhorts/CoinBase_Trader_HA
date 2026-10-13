@@ -20,8 +20,8 @@ options:
   grid_spacing_pct: 2.0
   grid_anchor_price: 0
   min_profit_margin_pct: 0.4
-  maker_fee_pct: 0.6
-  taker_fee_pct: 1.2
+  maker_fee_pct: 0.25
+  taker_fee_pct: 0.5
   use_fees_from_api: true
   use_signals: true
   granularity: FIVE_MINUTE
