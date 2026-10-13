@@ -69,13 +69,13 @@ class Trader:
             self.log.warning("could not save state: %s", exc)
 
     def balances(self):
-        if self.exchange.dry_run:
-            result = {}
-            for _product_id, base, quote, _info in self.selected:
-                result.setdefault(base, {"available": self.s.dry_run_base_balance, "hold": 0.0})
-                result.setdefault(quote, {"available": self.s.dry_run_quote_balance, "hold": 0.0})
-            return result
-        return self.exchange.get_accounts()
+        if self.exchange.private:
+            return self.exchange.get_accounts()
+        result = {}
+        for _product_id, base, quote, _info in self.selected:
+            result.setdefault(base, {"available": self.s.dry_run_base_balance, "hold": 0.0})
+            result.setdefault(quote, {"available": self.s.dry_run_quote_balance, "hold": 0.0})
+        return result
 
     def bootstrap(self):
         self.maker_fee, self.taker_fee = self.exchange.get_fee_rates()
