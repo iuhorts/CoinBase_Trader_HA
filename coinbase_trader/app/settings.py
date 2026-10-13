@@ -4,7 +4,9 @@ import os
 DEFAULTS = {
     "dry_run": False,
     "log_level": "info",
-    "product_id": "ETH-EUR",
+    "products": [],
+    "min_product_value": 10.0,
+    "quote_currency_preference": ["USDC", "EUR", "USDT", "USD"],
     "grid_levels": 8,
     "grid_spacing_pct": 2.0,
     "grid_anchor_price": 0.0,
@@ -21,6 +23,7 @@ DEFAULTS = {
     "rsi_oversold": 30.0,
     "max_drawdown_filter_pct": 6.0,
     "poll_interval_seconds": 60,
+    "reserve_base_pct": 25.0,
     "reserve_quote_pct": 0.0,
     "allow_sells": True,
     "max_open_orders": 12,
@@ -56,6 +59,7 @@ INT_KEYS = {
     "max_open_orders",
 }
 FLOAT_KEYS = {
+    "min_product_value",
     "grid_spacing_pct",
     "grid_anchor_price",
     "min_profit_margin_pct",
@@ -64,10 +68,12 @@ FLOAT_KEYS = {
     "rsi_overbought",
     "rsi_oversold",
     "max_drawdown_filter_pct",
+    "reserve_base_pct",
     "reserve_quote_pct",
     "dry_run_quote_balance",
     "dry_run_base_balance",
 }
+LIST_KEYS = {"products", "quote_currency_preference"}
 
 
 def _coerce(key, value):
@@ -79,6 +85,12 @@ def _coerce(key, value):
         return int(float(value))
     if key in FLOAT_KEYS:
         return float(value)
+    if key in LIST_KEYS:
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        if isinstance(value, (list, tuple)):
+            return [str(item) for item in value]
+        return []
     return value
 
 
@@ -100,10 +112,6 @@ class Settings:
                 data[key] = env
         for key, value in list(data.items()):
             data[key] = _coerce(key, value)
-        if "-" in data["product_id"]:
-            base, quote = data["product_id"].split("-", 1)
-            data["base_currency"] = base.upper()
-            data["quote_currency"] = quote.upper()
         self.__dict__.update(data)
 
     @property

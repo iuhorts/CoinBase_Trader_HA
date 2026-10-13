@@ -1,7 +1,7 @@
 name: Coinbase Trader
-version: "0.1.0"
+version: "0.2.1"
 slug: coinbase_trader
-description: Grid trading bot for Coinbase Advanced Trade with Home Assistant sensors and Telegram alerts
+description: Multi-asset inventory grid bot for Coinbase Advanced Trade with Home Assistant sensors and Telegram alerts
 url: https://github.com/iuhorts/CoinBase_Trader_HA
 arch:
   - aarch64
@@ -15,7 +15,9 @@ host_network: false
 options:
   dry_run: false
   log_level: info
-  product_id: ETH-EUR
+  products: []
+  min_product_value: 10
+  quote_currency_preference: ["USDC", "EUR", "USDT", "USD"]
   grid_levels: 8
   grid_spacing_pct: 2.0
   grid_anchor_price: 0
@@ -32,6 +34,7 @@ options:
   rsi_oversold: 30
   max_drawdown_filter_pct: 6
   poll_interval_seconds: 60
+  reserve_base_pct: 25
   reserve_quote_pct: 0
   allow_sells: true
   max_open_orders: 12
@@ -45,7 +48,9 @@ options:
 schema:
   dry_run: bool
   log_level: list(trace|debug|info|warning|error|critical)
-  product_id: str
+  products: list(str)
+  min_product_value: float(0,1000000)
+  quote_currency_preference: list(str)
   grid_levels: int(2,50)
   grid_spacing_pct: float(1,20)
   grid_anchor_price: float(0,100000000)
@@ -62,6 +67,7 @@ schema:
   rsi_oversold: float(0,50)
   max_drawdown_filter_pct: float(0,50)
   poll_interval_seconds: int(10,3600)
+  reserve_base_pct: float(0,100)
   reserve_quote_pct: float(0,99)
   allow_sells: bool
   max_open_orders: int(1,100)

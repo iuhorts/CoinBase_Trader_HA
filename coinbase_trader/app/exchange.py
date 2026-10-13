@@ -36,38 +36,33 @@ class Exchange:
                 "Set cdp_api_key_name and cdp_api_key_secret or enable dry_run."
             )
         self.sim_open = {}
-        self.price_increment = Decimal("0.01")
-        self.base_increment = Decimal("0.00000001")
-        self.quote_increment = Decimal("0.01")
-        self.quote_min_size = Decimal("1")
-        self.base_min_size = Decimal("0.00000001")
+        self._products = {}
 
-    def refresh_product(self):
-        data = self._get_product()
-        self.price_increment = Decimal(str(data.get("price_increment") or "0.01"))
-        self.base_increment = Decimal(str(data.get("base_increment") or "0.00000001"))
-        self.quote_increment = Decimal(str(data.get("quote_increment") or "0.01"))
-        self.quote_min_size = Decimal(str(data.get("quote_min_size") or "1"))
-        self.base_min_size = Decimal(str(data.get("base_min_size") or "0.00000001"))
+    def get_product(self, product_id):
+        if product_id in self._products:
+            return self._products[product_id]
+        if self.private:
+            data = self.client.get_product(product_id).to_dict()
+        else:
+            data = self.client.get_public_product(product_id).to_dict()
+        self._products[product_id] = data
         return data
 
-    def _get_product(self):
-        if self.private:
-            return self.client.get_product(self.s.product_id).to_dict()
-        return self.client.get_public_product(self.s.product_id).to_dict()
+    def try_product(self, product_id):
+        try:
+            return self.get_product(product_id)
+        except Exception:
+            return None
 
-    def get_price(self):
-        return float(self._get_product().get("price") or 0)
+    def get_price(self, product_id):
+        return float(self.get_product(product_id).get("price") or 0)
 
-    def get_candles(self):
-        granularity = self.s.granularity
+    def get_candles(self, product_id, granularity, count):
         seconds = GRANULARITY_SECONDS.get(granularity, 300)
         end = int(time.time())
-        count = min(300, max(80, self.s.ema_slow * 3))
+        count = min(300, max(80, count))
         start = end - count * seconds
-        response = self.client.get_public_candles(
-            self.s.product_id, str(start), str(end), granularity
-        )
+        response = self.client.get_public_candles(product_id, str(start), str(end), granularity)
         candles = []
         for item in response.to_dict().get("candles", []):
             candles.append(
@@ -83,7 +78,7 @@ class Exchange:
         candles.sort(key=lambda candle: candle["start"])
         return candles
 
-    def get_balances(self):
+    def get_accounts(self):
         if not self.private:
             return {}
         accounts = {}
@@ -119,36 +114,45 @@ class Exchange:
                 self.log.warning("Could not fetch fee tier: %s", exc)
         return self.s.maker_fee_pct / 100.0, self.s.taker_fee_pct / 100.0
 
-    def round_base(self, size):
+    def _increment(self, product_id, key, default):
+        value = self.get_product(product_id).get(key)
+        return Decimal(str(value)) if value else Decimal(default)
+
+    def round_base(self, product_id, size):
+        increment = self._increment(product_id, "base_increment", "0.00000001")
         value = Decimal(str(size))
-        return float((value / self.base_increment).to_integral_value(rounding=ROUND_DOWN) * self.base_increment)
+        return float((value / increment).to_integral_value(rounding=ROUND_DOWN) * increment)
 
-    def round_price(self, price):
+    def round_price(self, product_id, price):
+        increment = self._increment(product_id, "price_increment", "0.01")
         value = Decimal(str(price))
-        return float((value / self.price_increment).to_integral_value(rounding=ROUND_DOWN) * self.price_increment)
+        return float((value / increment).to_integral_value(rounding=ROUND_DOWN) * increment)
 
-    def place_limit(self, side, base_size, limit_price, post_only=True):
+    def quote_min_size(self, product_id):
+        return float(self.get_product(product_id).get("quote_min_size") or 1)
+
+    def place_limit(self, product_id, side, base_size, limit_price, post_only=True):
         order_id = str(uuid.uuid4())
-        base_size = self.round_base(base_size)
-        limit_price = self.round_price(limit_price)
+        base_size = self.round_base(product_id, base_size)
+        limit_price = self.round_price(product_id, limit_price)
         if base_size <= 0:
             return {"success": False, "error": "zero size"}
-        if Decimal(str(base_size * limit_price)) < self.quote_min_size:
+        if Decimal(str(base_size * limit_price)) < Decimal(str(self.quote_min_size(product_id))):
             return {"success": False, "error": "below quote minimum"}
         if self.dry_run:
-            self.sim_open[order_id] = {
+            self.sim_open.setdefault(product_id, {})[order_id] = {
                 "side": side,
                 "base_size": base_size,
                 "limit_price": limit_price,
                 "time": time.time(),
             }
-            self.log.info("[DRY] %s %.8f @ %.2f", side, base_size, limit_price)
+            self.log.info("[DRY] %s %s %.10g @ %.8g", product_id, side, base_size, limit_price)
             return {"success": True, "order_id": order_id, "base_size": base_size, "limit_price": limit_price}
         try:
             if side == "BUY":
                 response = self.client.limit_order_gtc_buy(
                     client_order_id=order_id,
-                    product_id=self.s.product_id,
+                    product_id=product_id,
                     base_size=f"{base_size:f}",
                     limit_price=f"{limit_price:f}",
                     post_only=post_only,
@@ -156,7 +160,7 @@ class Exchange:
             else:
                 response = self.client.limit_order_gtc_sell(
                     client_order_id=order_id,
-                    product_id=self.s.product_id,
+                    product_id=product_id,
                     base_size=f"{base_size:f}",
                     limit_price=f"{limit_price:f}",
                     post_only=post_only,
@@ -180,15 +184,16 @@ class Exchange:
         if not order_ids:
             return {"success": True}
         if self.dry_run:
-            for order_id in order_ids:
-                self.sim_open.pop(order_id, None)
+            for orders in self.sim_open.values():
+                for order_id in order_ids:
+                    orders.pop(order_id, None)
             return {"success": True}
         try:
             return self.client.cancel_orders(order_ids=order_ids).to_dict()
         except Exception as exc:
             return {"success": False, "error": str(exc)}
 
-    def list_open_orders(self):
+    def list_open_orders(self, product_id):
         if self.dry_run:
             return [
                 {
@@ -197,12 +202,12 @@ class Exchange:
                     "base_size": order["base_size"],
                     "limit_price": order["limit_price"],
                 }
-                for order_id, order in self.sim_open.items()
+                for order_id, order in self.sim_open.get(product_id, {}).items()
             ]
         orders = []
         try:
             response = self.client.list_orders(
-                order_status=["OPEN"], product_ids=[self.s.product_id], limit=100
+                order_status=["OPEN"], product_ids=[product_id], limit=100
             )
             for order in response.to_dict().get("orders", []):
                 configs = list((order.get("order_configuration") or {}).values())
@@ -216,13 +221,13 @@ class Exchange:
                     }
                 )
         except Exception as exc:
-            self.log.warning("list_orders failed: %s", exc)
+            self.log.warning("list_orders %s failed: %s", product_id, exc)
         return orders
 
-    def detect_fills(self, price):
+    def detect_fills(self, product_id, price, maker_fee_pct):
         if self.dry_run:
             fills = []
-            for order_id, order in list(self.sim_open.items()):
+            for order_id, order in list(self.sim_open.get(product_id, {}).items()):
                 hit = (order["side"] == "BUY" and price <= order["limit_price"]) or (
                     order["side"] == "SELL" and price >= order["limit_price"]
                 )
@@ -234,15 +239,15 @@ class Exchange:
                             "side": order["side"],
                             "base_size": order["base_size"],
                             "price": order["limit_price"],
-                            "commission": notional * (self.s.maker_fee_pct / 100.0),
+                            "commission": notional * (maker_fee_pct / 100.0),
                             "trade_id": order_id,
                         }
                     )
-                    self.sim_open.pop(order_id, None)
+                    self.sim_open.get(product_id, {}).pop(order_id, None)
             return fills
         fills = []
         try:
-            response = self.client.get_fills(product_ids=[self.s.product_id], limit=100)
+            response = self.client.get_fills(product_ids=[product_id], limit=100)
             for fill in response.to_dict().get("fills", []):
                 fills.append(
                     {
@@ -256,5 +261,5 @@ class Exchange:
                     }
                 )
         except Exception as exc:
-            self.log.warning("get_fills failed: %s", exc)
+            self.log.warning("get_fills %s failed: %s", product_id, exc)
         return fills

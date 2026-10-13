@@ -46,12 +46,14 @@ A la pestanya **Configuration** omple:
 | Camp | Valor |
 |---|---|
 | `dry_run` | `true` per provar primer; `false` per operar de veritat |
-| `product_id` | `ETH-EUR` (o canvia-ho) |
+| `products` | buit `[]` = autodescoberta segons el teu saldo; o llista manual com `["ETH-EUR"]` |
+| `min_product_value` | `10` (ignora actius de menys valor) |
 | `grid_levels` / `grid_spacing_pct` | `8` / `2.0` per defecte |
-| `cdp_api_key_name` | el `name` del JSON (o la teva api key) |
-| `cdp_api_key_secret` | el `privateKey` sencer (o el teu secret) |
+| `reserve_base_pct` | `25` (% de cada actiu que no es ven) |
+| `cdp_api_key_name` | el `name` del JSON (o la teva API key) |
+| `cdp_api_key_secret` | el `privateKey`/secret sencer |
 | `telegram_enabled` | `true` |
-| `telegram_bot_token` | el token de @BotFather |
+| `telegram_bot_token` | token de @BotFather |
 | `telegram_chat_id` | el teu `Id` |
 
 ## 5. Arrencar i comprovar
