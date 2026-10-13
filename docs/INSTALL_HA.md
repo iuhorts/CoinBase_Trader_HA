@@ -2,8 +2,8 @@
 
 ## 0. Requisits
 - Home Assistant OS de 64 bits (RPi5) amb connexió a internet.
-- Compte Coinbase amb fons en EUR.
-- (Opcional però recomanat) brokdat MQTT no cal — el bot publica sensors directament via l'API del supervisor.
+- Compte Coinbase amb cripto. Als comptes europeus **cal cotitzar en `USDC` (o `EUR`)**: els parells `-USD` estan restringits i donen l'error `account is not available`.
+- No cal MQTT: el bot publica sensors directament via l'API del supervisor.
 
 ## 1. Crear la CDP API key (Coinbase Advanced Trade)
 
@@ -46,7 +46,7 @@ A la pestanya **Configuration** omple:
 | Camp | Valor |
 |---|---|
 | `dry_run` | `true` per provar primer; `false` per operar de veritat |
-| `products` | buit `[]` = autodescoberta segons el teu saldo; o llista manual com `["ETH-EUR"]` |
+| `products` | buit `[]` = autodescoberta segons el teu saldo; o llista manual com `["HBAR-USDC"]` |
 | `min_product_value` | `10` (ignora actius de menys valor) |
 | `grid_levels` / `grid_spacing_pct` | `8` / `2.0` per defecte |
 | `reserve_base_pct` | `25` (% de cada actiu que no es ven) |
