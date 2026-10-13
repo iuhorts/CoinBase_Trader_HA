@@ -22,7 +22,7 @@ def setup_logging(level_name):
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
         stream=sys.stdout,
     )
-    logging.getLogger("coinbase").setLevel(logging.WARNING)
+    logging.getLogger("coinbase").setLevel(logging.CRITICAL)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 
