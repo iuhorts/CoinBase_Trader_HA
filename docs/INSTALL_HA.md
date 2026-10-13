@@ -77,3 +77,41 @@ Operació manual mentre corre:
 ## Consell de seguretat
 - Mai comparteixis `privateKey`.
 - Si sospites compromís: regenera la key a CDP i desactiva la vella.
+
+## Recepta per maximitzar el benefici
+
+### La fórmula
+Cada cicle complet (vendre dalt + recomprar baix) deixa aproximadament:
+
+```
+benefici per cicle ≈ (grid_spacing_pct − 0,50%) × notional
+```
+
+- `0,50%` = comissió d'anada i tornada maker (2 × `maker_fee_pct`).
+- Amb `grid_spacing_pct: 2` → uns **1,5% net** per cicle.
+- Per sota de ~`1,0%` d'espaiat el cicle deixa de ser rendible (el terra de comissions és 0,90%): el bot bloqueja els nivells no rendibles.
+
+### Les palanques (per ordre d'impacte)
+1. **Notional per nivell** (mida de cada ordre): com més gran, més € per cicle. Amb actius petits (10–30 USDC) cada ordre és petit. **Consolidar** en menys actius amb posicions grans multiplica el benefici més que tocar cap paràmetre.
+2. **`grid_spacing_pct`**: més petit = més cicles però menys marge. Rang útil: **1,5–2,0**. Mínim absolut ~1,0%.
+3. **Volatilitat**: la graella guanya quan el preu oscil·la dins d'un rang. En tendència forta, ven massa aviat (puja) o compra massa aviat (baixa).
+4. **Comissions**: és la clau. Al tram "Intro" (0,25% maker) es perd mig cicle en fees. Pujar de tram (més volum) o operar menys i més gran millora el rendiment net.
+5. **`reserve_base_pct`** (25%): la part que no es ven, per aprofitar pujades. Menys reserva = més vendes (més cicles); més reserva = menys, però captures tendències.
+6. **`grid_levels` / `max_open_orders`**: més nivells = més oportunitats, però reparteixes el capital en ordres més petites (no baixis del mínim ~1 USDC per ordre).
+
+### Pla per fases
+- **Fase 1 (24h):** no tocar res. Observar. Confirmar que també col·loca **compres** sota el preu (amb ordres BUY visibles a `/grid`).
+- **Fase 2 (si va bé):** `grid_spacing_pct: 1.5`, `grid_levels: 10`, `max_open_orders: 20`. Marge net ~1,0% i més cicles.
+- **Fase 3:** consolidar posicions (canviar pols/actius petits per 2–3 amb posició gran).
+
+### Revisió a 24h (checklist)
+- `/status` → que les ordres obertes es moguin i els `cycles` pugin.
+- `sensor.coinbase_trader_total_realized_pnl` i `sensor.coinbase_trader_recent_sells`.
+- Que hi hagi **vendes i compres** (no només un costat).
+- Cap `order rejected` al log.
+
+### Regles d'or
+- Mai `grid_spacing_pct` per sota de ~1,0%.
+- Mantenir `use_signals: true` (evita comprar en caigudes fortes).
+- Objectiu realista: **0,5–1,5% mensual** sobre el capital, segons tanto i volatilitat. No és una màquina d'imprimir.
+- `/pause` abans de moviments grossos; `/stop` per aturar i cancel·lar tot.
