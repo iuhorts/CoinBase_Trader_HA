@@ -162,6 +162,10 @@ class Trader:
             self.ha.set_state(f"{bot.slug}_last_action", bot.last_action, {"friendly_name": f"{bot.product_id} last action", "icon": "mdi:history", "anchor": bot.anchor, "levels": bot.levels, "lots": bot.lots})
         overall = "paused" if all(status == "paused" for status in statuses) and statuses else "running"
         self.ha.set_state("status", overall, {"friendly_name": "Coinbase Trader status", "icon": "mdi:robot"})
+        sells = [fill for bot in self.bots for fill in bot.recent if fill.get("side") == "SELL"]
+        sells.sort(key=lambda fill: fill.get("time") or 0, reverse=True)
+        sells = sells[:5]
+        self.ha.set_state("recent_sells", len(sells), {"friendly_name": "Coinbase Trader últimes vendes", "icon": "mdi:history", "sells": sells})
         self.ha.set_state("active_products", len(self.bots), {"friendly_name": "Coinbase Trader products", "icon": "mdi:format-list-bulleted"})
         portfolio_eur = self.exchange.portfolio_value_eur(balances) if self.exchange.private else 0.0
         self.ha.set_state("portfolio_eur", round(portfolio_eur, 2), {"unit_of_measurement": "EUR", "friendly_name": "Coinbase Trader valor total", "icon": "mdi:cash-multiple"})

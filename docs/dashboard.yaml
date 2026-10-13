@@ -9,6 +9,15 @@ views:
           # {{ states('sensor.coinbase_trader_portfolio_eur') }} €
           **Valor total del compte**
 
+      - type: markdown
+        title: Últimes 5 vendes
+        content: |
+          {% for f in state_attr('sensor.coinbase_trader_recent_sells','sells') or [] %}
+          <small>{{ f.time | timestamp_custom('%d/%m %H:%M', true) }}</small> · **{{ f.product }}** · {{ f.size }} @ {{ f.price }} · `{{ '%+.4f' | format(f.profit) }}` USDC
+          {% else %}
+          - Encara no hi ha vendes
+          {% endfor %}
+
       - type: entities
         title: Resum
         show_header_toggle: false

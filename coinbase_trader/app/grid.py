@@ -23,6 +23,7 @@ class GridBot:
         self.open_orders = {}
         self.processed_fills = []
         self.fills_since = 0.0
+        self.recent = []
         self.realized_pnl = 0.0
         self.cycles = 0
         self.last_action = ""
@@ -41,6 +42,7 @@ class GridBot:
         self.lots = [list(item) for item in state.get("lots", [])]
         self.processed_fills = state.get("processed_fills", [])
         self.fills_since = float(state.get("fills_since") or 0)
+        self.recent = state.get("recent", [])
         self.realized_pnl = float(state.get("realized_pnl") or 0)
         self.cycles = int(state.get("cycles") or 0)
         self.last_action = state.get("last_action") or ""
@@ -53,6 +55,7 @@ class GridBot:
             "lots": self.lots,
             "processed_fills": self.processed_fills,
             "fills_since": self.fills_since,
+            "recent": self.recent,
             "realized_pnl": self.realized_pnl,
             "cycles": self.cycles,
             "last_action": self.last_action,
@@ -92,6 +95,7 @@ class GridBot:
         price = float(fill["price"])
         commission = float(fill.get("commission") or 0)
         self.open_orders.pop(str(fill.get("order_id")), None)
+        profit = None
         if side == "BUY":
             self.lots.append([size, price])
             action = f"{self.base} BUY {size:.8g} @ {price:.8g}"
@@ -108,6 +112,17 @@ class GridBot:
                 f"profit {profit:+.4f} {self.quote}"
             )
         self.last_action = action
+        self.recent.append(
+            {
+                "time": self._fill_time(fill) or time.time(),
+                "side": side,
+                "size": size,
+                "price": price,
+                "profit": round(profit, 6) if profit is not None else None,
+                "product": self.product_id,
+            }
+        )
+        self.recent = self.recent[-20:]
         self.log.info(action)
         self.messages.append(action)
 
