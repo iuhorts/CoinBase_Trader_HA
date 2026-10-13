@@ -98,8 +98,9 @@ class Trader:
             bot.maker_fee = self.maker_fee
             bot.taker_fee = self.taker_fee
             bot.load(self.state["products"].get(product_id, {}))
-            base_available = balances.get(base, {}).get("available", 0.0)
-            bot.bootstrap(self.exchange.get_price(product_id), base_available)
+            base_balance = balances.get(base, {})
+            base_total = base_balance.get("available", 0.0) + base_balance.get("hold", 0.0)
+            bot.bootstrap(self.exchange.get_price(product_id), base_total)
             bot.paused = bool(self.state.get("paused", self.s.paused)) or bot.paused
             self.bots.append(bot)
             value = bot.total_base() * (bot.anchor or 0)

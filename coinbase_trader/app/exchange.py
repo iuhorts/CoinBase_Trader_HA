@@ -37,6 +37,7 @@ class Exchange:
             )
         self.sim_open = {}
         self._products = {}
+        self._known = None
 
     def get_product(self, product_id):
         if product_id in self._products:
@@ -53,6 +54,27 @@ class Exchange:
             return self.get_product(product_id)
         except Exception:
             return None
+
+    def known_products(self):
+        if self._known is not None:
+            return self._known
+        ids = set()
+        offset = 0
+        try:
+            while True:
+                data = self.client.get_products(limit=250, offset=offset).to_dict()
+                products = data.get("products", [])
+                for product in products:
+                    pid = product.get("product_id")
+                    if pid:
+                        ids.add(pid)
+                if len(products) < 250:
+                    break
+                offset += 250
+        except Exception as exc:
+            self.log.warning("could not list products: %s", exc)
+        self._known = ids
+        return ids
 
     def get_price(self, product_id):
         return float(self.get_product(product_id).get("price") or 0)

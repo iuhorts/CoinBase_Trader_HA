@@ -5,10 +5,14 @@ STABLES = {"USD", "USDC", "USDT", "DAI", "EUR", "GBP", "EURC", "PYUSD"}
 
 def discover_products(exchange, settings, balances):
     log = logging.getLogger("discovery")
+    known = exchange.known_products()
     selected = []
     if settings.products:
         for product_id in settings.products:
             product_id = product_id.strip().upper()
+            if known and product_id not in known:
+                log.warning("product %s not available, skipping", product_id)
+                continue
             info = exchange.try_product(product_id)
             if not info:
                 log.warning("product %s not available, skipping", product_id)
@@ -22,11 +26,13 @@ def discover_products(exchange, settings, balances):
     for base, balance in sorted(balances.items()):
         if base in STABLES:
             continue
-        quantity = balance.get("available", 0.0)
+        quantity = balance.get("available", 0.0) + balance.get("hold", 0.0)
         if quantity <= 0:
             continue
         for quote in preference:
             product_id = f"{base}-{quote}"
+            if known and product_id not in known:
+                continue
             info = exchange.try_product(product_id)
             if not info:
                 continue
@@ -38,5 +44,9 @@ def discover_products(exchange, settings, balances):
                 break
             selected.append((product_id, base, quote, info))
             break
-    selected.sort(key=lambda item: float(item[3].get("price") or 0) * balances[item[1]]["available"], reverse=True)
+    selected.sort(
+        key=lambda item: float(item[3].get("price") or 0)
+        * (balances[item[1]].get("available", 0.0) + balances[item[1]].get("hold", 0.0)),
+        reverse=True,
+    )
     return selected
