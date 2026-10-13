@@ -1,0 +1,132 @@
+title: Coinbase Trader
+views:
+  - title: Trader
+    path: coinbase-trader
+    icon: mdi:robot
+    cards:
+      - type: entities
+        title: Resum
+        show_header_toggle: false
+        entities:
+          - entity: sensor.coinbase_trader_status
+            name: Estat
+          - entity: sensor.coinbase_trader_active_products
+            name: Actius actius
+          - entity: sensor.coinbase_trader_total_realized_pnl
+            name: P/L realitzat total
+          - entity: sensor.coinbase_trader_fee_maker
+            name: Comissió maker
+          - entity: sensor.coinbase_trader_fee_taker
+            name: Comissió taker
+
+      - type: history-graph
+        title: P/L realitzat total
+        hours_to_show: 168
+        entities:
+          - entity: sensor.coinbase_trader_total_realized_pnl
+
+      - type: glance
+        title: Valor per actiu (USDC)
+        state_color: false
+        entities:
+          - entity: sensor.coinbase_trader_uni_usdc_value
+            name: UNI
+          - entity: sensor.coinbase_trader_aave_usdc_value
+            name: AAVE
+          - entity: sensor.coinbase_trader_ada_usdc_value
+            name: ADA
+          - entity: sensor.coinbase_trader_hbar_usdc_value
+            name: HBAR
+          - entity: sensor.coinbase_trader_lighter_usdc_value
+            name: LIGHTER
+
+      - type: entities
+        title: UNI-USDC
+        show_header_toggle: false
+        entities:
+          - entity: sensor.coinbase_trader_uni_usdc_price
+            name: Preu
+          - entity: sensor.coinbase_trader_uni_usdc_realized_pnl
+            name: P/L realitzat
+          - entity: sensor.coinbase_trader_uni_usdc_cycles
+            name: Cicles
+          - entity: sensor.coinbase_trader_uni_usdc_open_orders
+            name: Ordres obertes
+          - entity: sensor.coinbase_trader_uni_usdc_rsi
+            name: RSI
+          - entity: sensor.coinbase_trader_uni_usdc_last_action
+            name: Última acció
+
+      - type: entities
+        title: AAVE-USDC
+        show_header_toggle: false
+        entities:
+          - entity: sensor.coinbase_trader_aave_usdc_price
+            name: Preu
+          - entity: sensor.coinbase_trader_aave_usdc_realized_pnl
+            name: P/L realitzat
+          - entity: sensor.coinbase_trader_aave_usdc_cycles
+            name: Cicles
+          - entity: sensor.coinbase_trader_aave_usdc_open_orders
+            name: Ordres obertes
+          - entity: sensor.coinbase_trader_aave_usdc_rsi
+            name: RSI
+          - entity: sensor.coinbase_trader_aave_usdc_last_action
+            name: Última acció
+
+      - type: entities
+        title: ADA-USDC
+        show_header_toggle: false
+        entities:
+          - entity: sensor.coinbase_trader_ada_usdc_price
+            name: Preu
+          - entity: sensor.coinbase_trader_ada_usdc_realized_pnl
+            name: P/L realitzat
+          - entity: sensor.coinbase_trader_ada_usdc_cycles
+            name: Cicles
+          - entity: sensor.coinbase_trader_ada_usdc_open_orders
+            name: Ordres obertes
+          - entity: sensor.coinbase_trader_ada_usdc_rsi
+            name: RSI
+          - entity: sensor.coinbase_trader_ada_usdc_last_action
+            name: Última acció
+
+      - type: entities
+        title: HBAR-USDC
+        show_header_toggle: false
+        entities:
+          - entity: sensor.coinbase_trader_hbar_usdc_price
+            name: Preu
+          - entity: sensor.coinbase_trader_hbar_usdc_realized_pnl
+            name: P/L realitzat
+          - entity: sensor.coinbase_trader_hbar_usdc_cycles
+            name: Cicles
+          - entity: sensor.coinbase_trader_hbar_usdc_open_orders
+            name: Ordres obertes
+          - entity: sensor.coinbase_trader_hbar_usdc_rsi
+            name: RSI
+          - entity: sensor.coinbase_trader_hbar_usdc_last_action
+            name: Última acció
+
+      - type: entities
+        title: LIGHTER-USDC
+        show_header_toggle: false
+        entities:
+          - entity: sensor.coinbase_trader_lighter_usdc_price
+            name: Preu
+          - entity: sensor.coinbase_trader_lighter_usdc_realized_pnl
+            name: P/L realitzat
+          - entity: sensor.coinbase_trader_lighter_usdc_cycles
+            name: Cicles
+          - entity: sensor.coinbase_trader_lighter_usdc_open_orders
+            name: Ordres obertes
+          - entity: sensor.coinbase_trader_lighter_usdc_rsi
+            name: RSI
+          - entity: sensor.coinbase_trader_lighter_usdc_last_action
+            name: Última acció
+
+      - type: markdown
+        content: >-
+          Comandes per Telegram: `/status` · `/grid` · `/pause` · `/resume` · `/stop`.
+          Els sensors s'anomenen `sensor.coinbase_trader_<actiu>_<camp>` (p. ex.
+          `sensor.coinbase_trader_hbar_usdc_open_orders`).
