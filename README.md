@@ -66,9 +66,9 @@ Veure `docs/INSTALL_HA.md`. Resum:
 | Opció | Defecte | Significat |
 |---|---|---|
 | `dry_run` | `false` | Tira sense ordres reals (simula) |
-| `products` | `[]` | Llista manual de parells; buit = autodescoberta |
+| `products` | `""` | Parells separats per comes (ex. `HBAR-USDC,ADA-USDC`); buit = autodescoberta |
 | `min_product_value` | `10` | Valor mínim per incloure un actiu |
-| `quote_currency_preference` | `["USDC","EUR","USDT","USD"]` | Ordre de preferència de moneda de cotització |
+| `quote_currency_preference` | `USDC,EUR,USDT,USD` | Preferència de moneda de cotització, separada per comes |
 | `grid_levels` | `8` | Nombre de nivells de la graella |
 | `grid_spacing_pct` | `2.0` | Espaiat entre nivells (%) |
 | `grid_anchor_price` | `0` | Ancoratge fix; `0` = preu actual al primer arrencada |

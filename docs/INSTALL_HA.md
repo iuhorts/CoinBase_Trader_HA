@@ -46,8 +46,9 @@ A la pestanya **Configuration** omple:
 | Camp | Valor |
 |---|---|
 | `dry_run` | `true` per provar primer; `false` per operar de veritat |
-| `products` | buit `[]` = autodescoberta segons el teu saldo; o llista manual com `["HBAR-USDC"]` |
+| `products` | buit = autodescoberta; o llistat separat per comes, ex. `HBAR-USDC,ADA-USDC` |
 | `min_product_value` | `10` (ignora actius de menys valor) |
+| `quote_currency_preference` | `USDC,EUR,USDT,USD` (separat per comes; als EU cal USDC/EUR) |
 | `grid_levels` / `grid_spacing_pct` | `8` / `2.0` per defecte |
 | `reserve_base_pct` | `25` (% de cada actiu que no es ven) |
 | `cdp_api_key_name` | el `name` del JSON (o la teva API key) |
