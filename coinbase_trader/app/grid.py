@@ -192,7 +192,16 @@ class GridBot:
         existing = {(order["side"], order["level"]) for order in self.open_orders.values()}
         minimum_notional = self.exchange.quote_min_size(self.product_id)
         usable_base = base_available * (1.0 - self.s.reserve_base_pct / 100.0)
-        sell_slots = [j for j, lvl in enumerate(self.levels) if lvl > price and ("SELL", j) not in existing]
+        required_margin = 2.0 * self.maker_fee + self.s.min_profit_margin_pct / 100.0
+        avg_cost = self.average_cost()
+        min_sell_price = avg_cost * (1.0 + required_margin) if avg_cost else None
+        sell_slots = [
+            j
+            for j, lvl in enumerate(self.levels)
+            if lvl > price
+            and ("SELL", j) not in existing
+            and (min_sell_price is None or lvl >= min_sell_price)
+        ]
         if sell_slots:
             per_sell = usable_base / len(sell_slots)
             for j in sell_slots:
@@ -237,6 +246,12 @@ class GridBot:
 
     def total_base(self):
         return sum(lot[0] for lot in self.lots)
+
+    def average_cost(self):
+        total_quantity = sum(lot[0] for lot in self.lots)
+        if total_quantity <= 0:
+            return None
+        return sum(lot[0] * lot[1] for lot in self.lots) / total_quantity
 
     def market_value(self):
         return self.total_base() * self.price

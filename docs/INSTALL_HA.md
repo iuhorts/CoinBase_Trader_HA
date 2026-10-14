@@ -90,6 +90,7 @@ benefici per cicle ≈ (grid_spacing_pct − 0,50%) × notional
 - `0,50%` = comissió d'anada i tornada maker (2 × `maker_fee_pct`).
 - Amb `grid_spacing_pct: 2` → uns **1,5% net** per cicle.
 - Per sota de ~`1,0%` d'espaiat el cicle deixa de ser rendible (el terra de comissions és 0,90%): el bot bloqueja els nivells no rendibles.
+- **El bot no ven mai per sota del cost mitjà + marge** (`2 × maker_fee + min_profit_margin_pct`). Això evita vendre amb pèrdua i el "churn" de comprar i vendre al mateix preu. Si el preu cau per sota del teu cost, no ven: només compra, i espera que torni a pujar.
 
 ### Les palanques (per ordre d'impacte)
 1. **Notional per nivell** (mida de cada ordre): com més gran, més € per cicle. Amb actius petits (10–30 USDC) cada ordre és petit. **Consolidar** en menys actius amb posicions grans multiplica el benefici més que tocar cap paràmetre.
