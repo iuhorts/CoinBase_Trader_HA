@@ -77,17 +77,16 @@ class GridBot:
             self.lots = [[base_available, self.anchor]]
 
     def consume_lots(self, quantity):
-        cost = 0.0
-        remaining = quantity
-        while remaining > 0 and self.lots:
-            lot = self.lots[0]
-            taken = min(lot[0], remaining)
-            cost += taken * lot[1]
-            lot[0] -= taken
-            remaining -= taken
-            if lot[0] <= 1e-15:
-                self.lots.pop(0)
-        return cost
+        total = self.total_base()
+        average = self.average_cost()
+        if average is None or total <= 0:
+            return 0.0
+        sold = min(quantity, total)
+        ratio = sold / total
+        for lot in self.lots:
+            lot[0] *= 1.0 - ratio
+        self.lots = [lot for lot in self.lots if lot[0] > 1e-15]
+        return average * sold
 
     def apply_fill(self, fill):
         side = fill["side"]
@@ -195,13 +194,29 @@ class GridBot:
         required_margin = 2.0 * self.maker_fee + self.s.min_profit_margin_pct / 100.0
         avg_cost = self.average_cost()
         min_sell_price = avg_cost * (1.0 + required_margin) if avg_cost else None
-        sell_slots = [
-            j
-            for j, lvl in enumerate(self.levels)
-            if lvl > price
-            and ("SELL", j) not in existing
-            and (min_sell_price is None or lvl >= min_sell_price)
-        ]
+        if min_sell_price is not None:
+            stale = [
+                order_id
+                for order_id, order in self.open_orders.items()
+                if order["side"] == "SELL"
+                and order["level"] < len(self.levels)
+                and self.levels[order["level"]] < min_sell_price
+            ]
+            if stale:
+                self.exchange.cancel_orders(stale)
+                for order_id in stale:
+                    order = self.open_orders.pop(order_id)
+                    existing.discard(("SELL", order["level"]))
+                self.log.info("cancelled %d sell order(s) below break-even", len(stale))
+        sell_slots = []
+        if self.s.allow_sells:
+            sell_slots = [
+                j
+                for j, lvl in enumerate(self.levels)
+                if lvl > price
+                and ("SELL", j) not in existing
+                and (min_sell_price is None or lvl >= min_sell_price)
+            ]
         if sell_slots:
             per_sell = usable_base / len(sell_slots)
             for j in sell_slots:

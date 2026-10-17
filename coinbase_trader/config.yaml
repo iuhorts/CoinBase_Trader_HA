@@ -1,5 +1,5 @@
 name: Coinbase Trader
-version: "0.2.9"
+version: "0.2.10"
 slug: coinbase_trader
 description: Multi-asset inventory grid bot for Coinbase Advanced Trade with Home Assistant sensors and Telegram alerts
 url: https://github.com/iuhorts/CoinBase_Trader_HA

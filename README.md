@@ -10,7 +10,7 @@ AVÍS DE RISC: operar criptomonedes pot fer perdre tot el capital. El bot només
 
 - Descobreix automàticament els actius amb valor suficient i els hi munta una **graella d'inventari**.
 - **Ven** quotes de cada actiu per sobre del preu i **recompra** per sota (grid).
-- Cost base per lots **FIFO**: el P/L realitzat mostra el guany real de cada cicle.
+- Cost base a **cost mitjà**: el P/L realitzat de cada venda és coherent amb el guard (mai negatiu, només gastes les comissions previstes).
 - Filtre de tendència **EMA + RSI**: no compra en caigudes fortes ni amb RSI sobrecomprat.
 - Valida l'espaiat contra les **comissions reals** (les llegeix de l'API si tens keys).
 - Sensors per actiu a HA (`sensor.coinbase_trader_<actiu>_*`) més un resum agregat.
@@ -31,7 +31,7 @@ CoinBase_Trader_HA/
 │       ├── settings.py        # opcions (/data/options.json) + env
 │       ├── exchange.py        # wrap Coinbase Advanced API
 │       ├── discovery.py       # tria d'actius segons saldos
-│       ├── grid.py            # graella + lots FIFO per actiu
+│       ├── grid.py            # graella + cost mitjà per actiu
 │       ├── strategy.py        # grid + filtre EMA/RSI + viabilitat de fees
 │       ├── indicators.py      # EMA, SMA, RSI
 │       ├── ha.py              # API del supervisor (sensors)
@@ -75,6 +75,7 @@ Veure `docs/INSTALL_HA.md`. Resum:
 | `min_profit_margin_pct` | `0.4` | Marge net mínim (%) per nivell |
 | `maker_fee_pct` / `taker_fee_pct` | `0.25` / `0.5` | Fallback (es llegeix la fee real si pot) |
 | `reserve_base_pct` | `25` | % de cada actiu que NO es posa a la venda |
+| `allow_sells` | `true` | Si `false`, només compra (mai col·loca vendes) |
 | `use_signals` | `true` | Filtre EMA/RSI actiu |
 | `poll_interval_seconds` | `60` | Freqüència del loop |
 | `max_open_orders` | `12` | Màxim d'ordres obertes per actiu |
