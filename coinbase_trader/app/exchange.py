@@ -146,25 +146,34 @@ class Exchange:
     def get_accounts(self):
         if not self.private:
             return {}
-        accounts = {}
-        cursor = None
-        while True:
-            response = self.client.get_accounts(limit=250, cursor=cursor)
-            data = response.to_dict()
-            for account in data.get("accounts", []):
-                currency = account.get("currency")
-                if not currency:
-                    continue
-                available = float((account.get("available_balance") or {}).get("value") or 0)
-                hold = float((account.get("hold") or {}).get("value") or 0)
-                entry = accounts.setdefault(currency, {"available": 0.0, "hold": 0.0})
-                entry["available"] += available
-                entry["hold"] += hold
-            if data.get("has_next"):
-                cursor = data.get("cursor")
-            else:
-                break
-        return accounts
+        last_exc = None
+        for attempt in range(1, 4):
+            try:
+                accounts = {}
+                cursor = None
+                while True:
+                    response = self.client.get_accounts(limit=250, cursor=cursor)
+                    data = response.to_dict()
+                    for account in data.get("accounts", []):
+                        currency = account.get("currency")
+                        if not currency:
+                            continue
+                        available = float((account.get("available_balance") or {}).get("value") or 0)
+                        hold = float((account.get("hold") or {}).get("value") or 0)
+                        entry = accounts.setdefault(currency, {"available": 0.0, "hold": 0.0})
+                        entry["available"] += available
+                        entry["hold"] += hold
+                    if data.get("has_next"):
+                        cursor = data.get("cursor")
+                    else:
+                        break
+                return accounts
+            except Exception as exc:
+                last_exc = exc
+                self.log.warning("get_accounts attempt %d/3 failed: %s", attempt, exc)
+                if attempt < 3:
+                    time.sleep(0.5 * attempt)
+        raise last_exc
 
     def get_fee_rates(self):
         if self.private and self.s.use_fees_from_api:

@@ -38,6 +38,7 @@ class Trader:
         self.bots = []
         self.selected = []
         self.state = self._load_state()
+        self._last_balances = {}
 
     def _state_path(self):
         path = self.s.state_file
@@ -130,7 +131,12 @@ class Trader:
         return budgets
 
     def tick(self):
-        balances = self.balances()
+        try:
+            balances = self.balances()
+            self._last_balances = balances
+        except Exception as exc:
+            self.log.warning("balances() failed, using last known balances: %s", exc)
+            balances = dict(self._last_balances)
         self.maker_fee, self.taker_fee = self.exchange.get_fee_rates()
         budgets = self.quote_budgets(balances)
         for bot in self.bots:
